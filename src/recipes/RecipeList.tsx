@@ -2,16 +2,15 @@ import { Link, useSearchParams } from "react-router-dom";
 import "./RecipesLayout.css";
 import { useEffect, useState } from "react";
 import { Recipe as APIRecipe, getRecipes } from "../services/apiFacade";
-//import { useAuth } from "../security/_Authprovider";
+import { useAuth } from "../security/AuthProvider";
 
 export default function RecipeList() {
-  //const [queryString] = useSearchParams();
-  //const initialCategory = queryString.get("category");
-  const initialCategory = null;
+  const [queryString] = useSearchParams();
+  const initialCategory = queryString.get("category");
   const [recipes, setRecipes] = useState<Array<APIRecipe>>([]);
   const [category, setCategory] = useState<string | null>(initialCategory);
   const [error, setError] = useState("");
-  //const auth = useAuth();
+  const auth = useAuth();
 
   useEffect(() => {
     getRecipes(category)
@@ -20,15 +19,19 @@ export default function RecipeList() {
 
   }, [category]);
 
-  const recipeListItems = recipes.map((recipe) => {
-    return (
-      <li key={recipe.id}>
-        <Link to={`${recipe.id}`}>{recipe.name}</Link>,
-        {/*TODO:Eventually this should only be added for a logged in user*/}
-        {/* <Link className="recipe-btn" to="/add" state={recipe}>Edit </Link> */}
-      </li>
-    );
-  });
+ const recipeListItems = recipes.map((recipe) => {
+   return (
+     <li key={recipe.id}>
+       <Link to={`${recipe.id}`}>{recipe.name}</Link>,
+       {auth.isLoggedInAs &&
+         auth.isLoggedInAs(["ADMIN"]) && (
+           <Link className="recipe-btn" to="/add" state={recipe}>
+             Edit{" "}
+           </Link>
+         )}
+     </li>
+   );
+ });
 
   if(error!==""){
     return <h2 style={{color:"red"}}>{error}</h2>
